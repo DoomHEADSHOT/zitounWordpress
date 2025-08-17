@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: baraka-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - app-network
+
+  wordpress:
+    image: wordpress:latest        # <-- Apache image (serves HTTP itself)
+    container_name: baraka-wordpress
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=${MYSQL_USER}
+      - WORDPRESS_DB_PASSWORD=${MYSQL_PASSWORD}
+      - WORDPRESS_DB_NAME=${MYSQL_DATABASE}
+    volumes:
+      - wordpress:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - app-network
+      - nginx-proxy-network        # <-- attach to proxy network so nginx can reach it
+    # no ports: we publish via the reverse proxy only
+
+volumes:
+  wordpress:
+  dbdata:
+
+networks:
+  app-network:
+    driver: bridge
+  nginx-proxy-network:
+    external: true                 # <-- use the existing proxy network
