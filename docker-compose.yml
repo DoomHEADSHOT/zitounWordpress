@@ -14,9 +14,8 @@ services:
       - dbdata:/var/lib/mysql
     networks:
       - app-network
-
   wordpress:
-    image: wordpress:latest        # <-- Apache image (serves HTTP itself)
+    image: wordpress:6.8.2-php8.4-apache       # <-- Apache image (serves HTTP itself)
     container_name: baraka-wordpress
     restart: unless-stopped
     env_file: .env
